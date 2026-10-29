@@ -42,12 +42,13 @@ public class MessageController {
         return service.get(id);
     }
 
+    /** 202 Accepted: the message was queued; a Kafka consumer saves it shortly after. */
     @PostMapping
     public ResponseEntity<MessageResponse> create(@Valid @RequestBody MessageRequest request) {
-        MessageResponse created = service.create(request);
+        MessageResponse accepted = service.create(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{id}").buildAndExpand(created.id()).toUri();
-        return ResponseEntity.created(location).body(created);
+                .path("/{id}").buildAndExpand(accepted.id()).toUri();
+        return ResponseEntity.accepted().location(location).body(accepted);
     }
 
     @PutMapping("/{id}")

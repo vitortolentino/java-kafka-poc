@@ -11,6 +11,7 @@ services:
     command: sleep infinity
     environment:
       MONGODB_URI: mongodb://mongo:27017/poc
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     volumes:
       - .:/app
       - app-target:/app/target

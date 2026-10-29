@@ -10,7 +10,8 @@ public record MessageResponse(
         String city,
         String note,
         Instant createdAt,
-        Instant updatedAt) {
+        Instant updatedAt,
+        String savedBy) {
 
     public static MessageResponse from(Message message) {
         return new MessageResponse(
@@ -19,6 +20,7 @@ public record MessageResponse(
                 message.city(),
                 message.note(),
                 message.createdAt(),
-                message.updatedAt());
+                message.updatedAt(),
+                message.savedBy());
     }
 }

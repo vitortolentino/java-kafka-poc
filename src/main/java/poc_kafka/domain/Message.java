@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 /**
  * Document stored in the "messages" collection.
  * The city field is indexed because it is used as a filter when listing.
+ * savedBy records which Kafka consumer persisted the document.
  */
 @Document("messages")
 public record Message(
@@ -17,5 +18,6 @@ public record Message(
         @Indexed String city,
         String note,
         Instant createdAt,
-        Instant updatedAt) {
+        Instant updatedAt,
+        String savedBy) {
 }
