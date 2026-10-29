@@ -1,0 +1,17 @@
+# Container for the IntelliJ backend (Dev Containers), using the same JDK 25 and
+# Maven cache as the app. Kept separate from "app" so that an application crash
+# does not disconnect the IDE. Paths are relative to the project root.
+services:
+
+  ide:
+    build:
+      context: .
+      target: dev
+    container_name: poc-kafka-ide
+    command: sleep infinity
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/poc
+    volumes:
+      - .:/app
+      - app-target:/app/target
+      - maven-repo:/root/.m2

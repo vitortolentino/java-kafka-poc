@@ -1,6 +1,8 @@
 spring:
   application:
     name: poc-kafka
+  mongodb:
+    uri: ${MONGODB_URI:mongodb://localhost:27017/poc}
   data:
     mongodb:
-      uri: ${SPRING_DATA_MONGODB_URI}
+      auto-index-creation: true

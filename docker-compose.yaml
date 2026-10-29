@@ -1,3 +1,5 @@
+name: poc-kafka
+
 services:
 
   mongo:
@@ -5,13 +7,35 @@ services:
     container_name: mongo
     ports:
       - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   app:
-    build: .
+    build:
+      context: .
+      target: dev
     container_name: poc-kafka
     environment:
-      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/poc
-    depends_on:
-      - mongo
+      MONGODB_URI: mongodb://mongo:27017/poc
+      SPRING_DEVTOOLS_RESTART_POLL_INTERVAL: 2s
+      SPRING_DEVTOOLS_RESTART_QUIET_PERIOD: 1s
+    volumes:
+      - .:/app
+      - app-target:/app/target
+      - maven-repo:/root/.m2
     ports:
       - "8080:8080"
+      - "5005:5005"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+volumes:
+  mongo-data:
+  app-target:
+  maven-repo:

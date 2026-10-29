@@ -1,0 +1,11 @@
+{
+  "name": "poc-kafka",
+  "dockerComposeFile": ["../docker-compose.yaml", "docker-compose.devcontainer.yaml"],
+  "service": "ide",
+  "workspaceFolder": "/app",
+  "customizations": {
+    "jetbrains": {
+      "backend": "IntelliJ"
+    }
+  }
+}
