@@ -4,6 +4,11 @@ WORKDIR /app
 
 # Development: source code is mounted as a volume (see docker-compose.yaml)
 FROM base AS dev
+# vim as the default editor (git commit, etc.)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends vim \
+    && rm -rf /var/lib/apt/lists/*
+ENV EDITOR=vim
 COPY docker/dev-entrypoint.sh /usr/local/bin/dev-entrypoint.sh
 RUN chmod +x /usr/local/bin/dev-entrypoint.sh
 EXPOSE 8080 5005
