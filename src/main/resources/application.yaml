@@ -3,11 +3,19 @@ spring:
     name: poc-kafka
   mongodb:
     uri: ${MONGODB_URI:mongodb://localhost:27017/poc}
+    # Set explicitly because the Cosmos DB connection string has no database in its path
+    database: ${MONGODB_DATABASE:poc}
   data:
     mongodb:
       auto-index-creation: true
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
+    # PLAINTEXT locally; managed brokers in the cloud use SASL_SSL with credentials
+    security:
+      protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
+    properties:
+      sasl.mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
+      sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG:}
     producer:
       # Wait for all in-sync replicas; idempotence avoids duplicates on producer retries
       acks: all

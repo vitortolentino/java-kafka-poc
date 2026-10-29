@@ -1,0 +1,16 @@
+# Copy to terraform.tfvars (git-ignored) and fill in.
+
+subscription_id   = "00000000-0000-0000-0000-000000000000"
+github_repository = "your-user/poc-kafka"
+
+# Managed Kafka reachable from Azure. Examples:
+#
+# Confluent Cloud (API key / secret of the cluster):
+#   kafka_bootstrap_servers = "pkc-xxxxx.brazilsouth.azure.confluent.cloud:9092"
+#   kafka_sasl_jaas_config  = "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"API_KEY\" password=\"API_SECRET\";"
+#
+# Azure Event Hubs (Standard tier or above; Basic has no Kafka endpoint):
+#   kafka_bootstrap_servers = "my-namespace.servicebus.windows.net:9093"
+#   kafka_sasl_jaas_config  = "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"$ConnectionString\" password=\"Endpoint=sb://...\";"
+kafka_bootstrap_servers = ""
+kafka_sasl_jaas_config  = ""

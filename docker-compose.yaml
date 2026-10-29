@@ -65,7 +65,22 @@ services:
       kafka:
         condition: service_healthy
 
+  # Azure CLI + Terraform shell for infra/. Behind a profile, so "docker compose up" skips it.
+  infra:
+    profiles: ["infra"]
+    build:
+      context: .
+      dockerfile: docker/infra.Dockerfile
+    working_dir: /app/infra
+    volumes:
+      - .:/app
+      # Jar built by the app/ide containers, for manual deploys
+      - app-target:/app/target:ro
+      # Keeps the "az login" session between runs
+      - azure-cli:/root/.azure
+
 volumes:
+  azure-cli:
   mongo-data:
   app-target:
   maven-repo:

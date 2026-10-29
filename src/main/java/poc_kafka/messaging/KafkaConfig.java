@@ -28,18 +28,18 @@ public class KafkaConfig {
     /** Consumers A and B share this group, so each record is processed by only one of them. */
     public static final String CONSUMER_GROUP = "message-savers";
 
-    /** Two partitions: one per consumer in the group. */
+    /** Two partitions: one per consumer in the group. Replicas use the broker default. */
     private static final int PARTITIONS = 2;
 
     @Bean
     NewTopic messagesTopic() {
-        return TopicBuilder.name(TOPIC).partitions(PARTITIONS).replicas(1).build();
+        return TopicBuilder.name(TOPIC).partitions(PARTITIONS).build();
     }
 
     /** Same partition count as the main topic: a failed record goes to the same partition number. */
     @Bean
     NewTopic messagesDeadLetterTopic() {
-        return TopicBuilder.name(DEAD_LETTER_TOPIC).partitions(PARTITIONS).replicas(1).build();
+        return TopicBuilder.name(DEAD_LETTER_TOPIC).partitions(PARTITIONS).build();
     }
 
     /**
