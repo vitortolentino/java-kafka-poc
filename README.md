@@ -23,6 +23,16 @@ docker compose up --build
 
 Changes to `pom.xml` require `docker compose restart app`.
 
+`docker compose up` starts only `mongo`, `kafka` and `app`. The other services are tools for specific
+tasks: they sit behind a [profile](https://docs.docker.com/compose/how-tos/profiles/) and run on demand:
+
+| Service | Profile | Purpose | Run it |
+|---|---|---|---|
+| `infra` | `infra` | Azure CLI + Terraform shell to create/change the Azure resources | `docker compose run --rm --build infra` |
+| `trivy` | `tools` | Security scan | `docker compose run --rm trivy` |
+
+The Dev Container service (`ide`) lives in `.devcontainer/docker-compose.devcontainer.yaml` and is started by the IDE.
+
 ### Dev Container (IntelliJ)
 
 Open the project with Dev Containers (`.devcontainer/`): the IDE backend runs in the `ide`
@@ -37,6 +47,47 @@ mvn test
 ```
 
 Do not run `mvn clean`: `target/` is a volume mount point.
+
+## Quality checks
+
+| Check | Tool | Run it |
+|---|---|---|
+| Formatting | Spotless + palantir-java-format | `mvn spotless:apply` (fix), `mvn spotless:check` |
+| Static analysis + security patterns | SpotBugs + FindSecBugs | `mvn verify` (exclusions with a reason in `spotbugs-exclude.xml`) |
+| Code conventions (naming, imports, coding practices) | Checkstyle, Google style rules without layout | `mvn checkstyle:check` (rules in `checkstyle.xml`) |
+| Dependency CVEs, Dockerfile/Terraform misconfig, secrets | Trivy | `docker compose run --rm trivy` (from WSL; config in `trivy.yaml`) |
+| Commit messages | Conventional Commits | `commit-msg` hook / CI |
+
+`mvn verify` runs tests, Spotless, Checkstyle and SpotBugs together, the same as CI. GitHub also runs CodeQL
+and Dependabot (`.github/`).
+
+### Git hooks
+
+Versioned in `.githooks/`; the Dev Container enables them on creation. In an existing container:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+| Hook | Runs | Time |
+|---|---|---|
+| `pre-commit` | `mvn spotless:check` | seconds |
+| `commit-msg` | `scripts/check-commit-msg.sh` | instant |
+| `pre-push` | `mvn verify` (tests need the compose MongoDB) | ~1 min |
+
+Hooks skip with a warning when `mvn` is not available (git run outside the Dev Container).
+Bypass on purpose with `--no-verify`.
+
+### Commit messages
+
+`<type>(<optional scope>): <description>`, header up to 100 characters.
+Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
+
+```text
+feat(kafka): add retry topic for failed messages
+fix: return 404 when the message does not exist
+feat(api)!: rename fields          # "!" marks a breaking change
+```
 
 ## API
 
@@ -85,4 +136,5 @@ docker exec kafka /opt/kafka/bin/kafka-console-consumer.sh \
 docker compose run --rm --build infra   # shell with Azure CLI + Terraform
 ```
 
-Then follow [infra/README.md](infra/README.md).
+Then follow [infra/README.md](infra/README.md). The infra shell is only for creating or changing the
+infrastructure; after that, every push to `main` deploys through GitHub Actions.

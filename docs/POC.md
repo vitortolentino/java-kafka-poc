@@ -51,10 +51,10 @@ Message delivery: 1 producer, 2 consumers.
 ## Current design
 
 ### Versions
-Spring Boot 4.1.1, spring-kafka 4.1.1 (Jackson 3: `JacksonJsonSerializer`/`JacksonJsonDeserializer`),
-kafka-clients 4.2.1, MongoDB 8, `apache/kafka:4.1.0`, Terraform 1.16.5, azurerm 5.x, azuread 3.x.
+Spring Boot 4.1.2, spring-kafka 4.1.2 (Jackson 3: `JacksonJsonSerializer`/`JacksonJsonDeserializer`),
+kafka-clients 4.2.2 (lz4-java and snappy-java overridden in `pom.xml` for CVEs), MongoDB 8, `apache/kafka:4.1.0`, Terraform 1.16.5, azurerm 5.x, azuread 3.x.
 
-### Packages (`src/main/java/poc_kafka`)
+### Packages (`src/main/java/pockafka`)
 | Package | Content |
 |---|---|
 | `controller` | `MessageController` (`/messages`), `ApiExceptionHandler` (RFC 9457 Problem Details), `dto/MessageRequest` (validated record), `dto/MessageResponse` |
@@ -123,18 +123,41 @@ Document fields: `id, name, city, note, createdAt, updatedAt, savedBy`.
   external broker through the `kafka_*` Terraform variables.
 - Local Terraform state (git-ignored); `terraform.tfvars` git-ignored, template in `terraform.tfvars.example`.
 
-### CI/CD (`.github/workflows/ci-cd.yaml`)
-- `build`: MongoDB service container, Temurin 25, `mvn -B verify`, uploads the jar.
-- `deploy`: only on `main` and only when the variable `AZURE_WEBAPP_NAME` exists; environment `production`;
-  `azure/login@v3` with OIDC (`AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` as repository
-  variables from `terraform output`), then `azure/webapps-deploy@v3`.
+### Quality checks
+- **Spotless** + palantir-java-format (4 spaces, 120 columns), sortPom, trailing whitespace in YAML/MD/TF/scripts;
+  `check` bound to `verify`. `.editorconfig` for the IDE.
+- **SpotBugs** (effort Max, threshold Medium) + **FindSecBugs**; `check` bound to `verify`.
+  `spotbugs-exclude.xml`: `EI_EXPOSE_REP/EI_EXPOSE_REP2` (Spring constructor injection false positives).
+- **Checkstyle** 14.3 (`checkstyle.xml`): Google style naming, imports, blocks and coding practices, **no layout rules**
+  (those belong to Spotless, so the tools never conflict); `log` allowed as logger name; main + test sources;
+  `check` bound to `verify`. Package renamed `poc_kafka` -> `pockafka` (Google style: lowercase, no underscores).
+- **Trivy** 0.76 (`trivy.yaml`): vuln + misconfig + secret, HIGH/CRITICAL, exit code 1; `.trivyignore`
+  for accepted findings. Local: compose service `trivy` (profile `tools`).
+- **Git hooks** in `.githooks/` (`core.hooksPath`, set by the Dev Container `postCreateCommand`):
+  `pre-commit` spotless:check, `commit-msg` Conventional Commits, `pre-push` `mvn verify`.
+  They skip with a warning when `mvn` is missing.
+- **Conventional Commits** from commit `a38bc73` on (older commits are not rewritten), header ≤ 100 chars,
+  checked by `scripts/check-commit-msg.sh` (hook and CI).
+
+### CI/CD (`.github/`)
+- Repository: https://github.com/vitortolentino/java-kafka-poc
+- `ci-cd.yaml`:
+  - `build`: MongoDB service container, Temurin 25, `mvn -B verify` (tests + Spotless + Checkstyle + SpotBugs), uploads the jar.
+  - `commit-lint`: checks every commit of the push/PR with `scripts/check-commit-msg.sh`.
+  - `security`: Trivy via Docker image, SARIF uploaded to the Security tab, then fails on HIGH/CRITICAL.
+  - `deploy`: needs `build` and `security`; only on `main` and only when the variable `AZURE_WEBAPP_NAME` exists;
+    environment `production`; `azure/login@v3` with OIDC (`AZURE_CLIENT_ID`, `AZURE_TENANT_ID`,
+    `AZURE_SUBSCRIPTION_ID` as repository variables from `terraform output`), then `azure/webapps-deploy@v3`.
+- `codeql.yaml`: CodeQL `security-and-quality` for Java, on push/PR and weekly.
+- `dependabot.yml`: weekly for maven, github-actions, docker, docker-compose, terraform; minor/patch grouped;
+  commit messages `build(deps)` / `ci(deps)`.
 
 ## Open items
-- Create the GitHub repository on the user's personal account, then commit and push (done by the user).
 - Choose a managed Kafka for the cloud (e.g. Confluent Cloud trial) and fill `terraform.tfvars`.
 - Run `terraform apply`; confirm Java 25 is offered (`az webapp list-runtimes --os-type linux`) and that
   the account can create Entra app registrations (otherwise deploy manually with `az webapp deploy`).
-- Never executed: `docker compose up` with the Kafka container, the `infra` image build, the GitHub workflow.
+- Never executed: `docker compose up` with the Kafka container, the `infra` image build, the GitHub workflows,
+  Trivy (first run may report findings to fix or justify in `.trivyignore`).
 - Known free-tier limits: F1 has 60 CPU min/day and sleeps when idle (consumers stop with it); B1 if it hurts.
   Cosmos DB free tier: one account per subscription.
 - POST returns 500 if Kafka is unreachable (blocks up to `max.block.ms`, 60 s); could map to 503.

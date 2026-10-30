@@ -13,11 +13,24 @@ Kafka is **not** created here: the app connects to an external managed Kafka
 
 ## 1. Open the tooling shell
 
-Everything runs in Docker (Azure CLI + Terraform), from the project root in WSL:
+Provisioning needs two tools: the **Azure CLI** (`az login`, queries, manual deploys) and
+**Terraform** (applies the `.tf` files). Instead of installing them, the compose service `infra`
+(image `docker/infra.Dockerfile`) gives a disposable shell with both, at pinned versions, so every run
+uses the same tooling and nothing is installed in WSL.
+
+From the project root in WSL:
 
 ```bash
 docker compose run --rm --build infra
 ```
+
+- Opens `bash` in `/app/infra` (the project is mounted, so Terraform reads and writes this folder).
+- Runs as uid 1000, so files it creates (`.terraform/`, `terraform.tfstate`) belong to your WSL user.
+- The `az login` session is kept in the `azure-cli` volume; `--rm` removes only the container.
+- It is not part of `docker compose up` (profile `infra`): use it when creating, changing or destroying
+  resources, or for a manual deploy. Regular deploys run in GitHub Actions.
+- If `az` fails with a permission error on `~/.azure`, the volume was created by an older root image:
+  `docker volume rm poc-kafka_azure-cli` and run again.
 
 ## 2. Log in to Azure
 
