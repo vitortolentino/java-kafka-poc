@@ -77,10 +77,24 @@ services:
       # Jar built by the app/ide containers, for manual deploys
       - app-target:/app/target:ro
       # Keeps the "az login" session between runs
-      - azure-cli:/root/.azure
+      - azure-cli:/home/infra/.azure
+
+  # Security scan (dependency CVEs, Dockerfile/Terraform misconfigurations, secrets): docker compose run --rm trivy
+  trivy:
+    profiles: ["tools"]
+    image: aquasec/trivy:0.76.0
+    working_dir: /app
+    command: ["fs", "--config", "trivy.yaml", "--skip-version-check", "."]
+    volumes:
+      - .:/app:ro
+      - trivy-cache:/root/.cache/trivy
+      # Maven cache filled by the app/ide containers: Trivy resolves the dependency tree from it
+      # instead of downloading every POM from Maven Central (which rate-limits with HTTP 429)
+      - maven-repo:/root/.m2:ro
 
 volumes:
   azure-cli:
+  trivy-cache:
   mongo-data:
   app-target:
   maven-repo:

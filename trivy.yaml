@@ -1,0 +1,15 @@
+# Trivy configuration shared by "docker compose run --rm trivy" and CI.
+# Scans Maven dependencies (CVEs), Dockerfiles and Terraform (misconfigurations) and secrets.
+scan:
+  scanners:
+    - vuln
+    - misconfig
+    - secret
+  skip-dirs:
+    - target
+    - infra/.terraform
+severity:
+  - HIGH
+  - CRITICAL
+exit-code: 1
+ignorefile: .trivyignore

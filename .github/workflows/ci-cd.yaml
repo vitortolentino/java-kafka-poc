@@ -29,7 +29,8 @@ jobs:
           java-version: "25"
           cache: maven
 
-      - name: Test and package
+      # Tests + Spotless (formatting) + SpotBugs/FindSecBugs (static analysis), all bound to "verify"
+      - name: Test, check and package
         run: mvn -B verify
 
       - uses: actions/upload-artifact@v7
@@ -38,8 +39,68 @@ jobs:
           path: target/poc-kafka-*.jar
           retention-days: 7
 
+  # Conventional Commits, same script as the local commit-msg hook (catches commits made with --no-verify)
+  commit-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Check commit messages
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: |
+          # First push of a branch has no "before": check only the last commit
+          if [[ -z "$BASE" || "$BASE" =~ ^0+$ ]]; then
+            commits="$HEAD"
+          else
+            commits="$(git rev-list --no-merges "$BASE..$HEAD")"
+          fi
+          status=0
+          for sha in $commits; do
+            bash scripts/check-commit-msg.sh --text "$(git log -1 --format=%B "$sha")" || status=1
+          done
+          exit $status
+
+  # Dependency CVEs, Dockerfile/Terraform misconfigurations and secrets (config in trivy.yaml)
+  security:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # upload results to the Security tab
+    steps:
+      - uses: actions/checkout@v7
+
+      # Fill ~/.m2 (cached between runs) so Trivy reads the dependency tree locally:
+      # downloading every POM from Maven Central gets rate-limited (HTTP 429)
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+
+      - name: Resolve dependencies
+        run: mvn -B -q dependency:resolve
+
+      - name: Trivy report (SARIF)
+        run: >-
+          docker run --rm -v "$PWD:/app" -v "$HOME/.m2:/root/.m2:ro" -w /app aquasec/trivy:0.76.0
+          fs --config trivy.yaml --skip-version-check --format sarif --output trivy.sarif --exit-code 0 .
+
+      - uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy.sarif
+          category: trivy
+
+      - name: Trivy gate (fails on HIGH/CRITICAL)
+        run: >-
+          docker run --rm -v "$PWD:/app" -v "$HOME/.m2:/root/.m2:ro" -w /app aquasec/trivy:0.76.0
+          fs --config trivy.yaml --skip-version-check .
+
   deploy:
-    needs: build
+    needs: [build, security]
     # Skipped until the Azure variables exist (see infra/README.md), so the first pushes stay green
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.AZURE_WEBAPP_NAME != ''
     runs-on: ubuntu-latest
