@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SpotBugs findings accepted on purpose. Every entry needs a reason. -->
+<FindBugsFilter>
+    <!--
+      EI_EXPOSE_REP / EI_EXPOSE_REP2: flags any constructor that stores a mutable object it received.
+      With Spring constructor injection that object is a shared singleton bean, which is exactly the intent.
+    -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+</FindBugsFilter>
