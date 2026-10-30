@@ -3,6 +3,7 @@
   "dockerComposeFile": ["../docker-compose.yaml", "docker-compose.devcontainer.yaml"],
   "service": "ide",
   "workspaceFolder": "/app",
+  "postCreateCommand": "git config core.hooksPath .githooks",
   "customizations": {
     "jetbrains": {
       "backend": "IntelliJ"

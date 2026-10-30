@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Full check before pushing: tests, formatting, Checkstyle and SpotBugs (the same as CI's build job).
+# Needs the compose MongoDB. Skip on purpose with: git push --no-verify
+if ! command -v mvn >/dev/null 2>&1; then
+    echo "[pre-push] mvn not found, skipping tests (run git inside the Dev Container)" >&2
+    exit 0
+fi
+echo "[pre-push] Running mvn verify..." >&2
+if ! mvn -q verify; then
+    echo "[pre-push] mvn verify failed: push aborted" >&2
+    exit 1
+fi

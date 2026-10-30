@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Rejects commit messages that do not follow Conventional Commits.
+exec bash "$(git rev-parse --show-toplevel)/scripts/check-commit-msg.sh" "$1"

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Fast check before each commit: formatting only (tests run on pre-push).
+# Skip on purpose with: git commit --no-verify
+if ! command -v mvn >/dev/null 2>&1; then
+    echo "[pre-commit] mvn not found, skipping the format check (run git inside the Dev Container)" >&2
+    exit 0
+fi
+if ! mvn -q -o spotless:check >/dev/null 2>&1; then
+    echo "[pre-commit] Formatting issues found. Fix them with: mvn spotless:apply" >&2
+    exit 1
+fi
