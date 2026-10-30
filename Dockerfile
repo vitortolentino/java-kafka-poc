@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM maven:3.9.11-eclipse-temurin-25 AS base
+FROM maven:3.9-eclipse-temurin-26 AS base
 WORKDIR /app
 
 # Development: source code is mounted as a volume (see docker-compose.yaml)
