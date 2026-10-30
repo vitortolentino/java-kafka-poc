@@ -36,7 +36,7 @@
 		<checkstyle.version>14.3.0</checkstyle.version>
 		<!-- Security overrides of transitive dependencies (Trivy). Remove once kafka-clients ships fixed versions. -->
 		<lz4-java.version>1.11.4</lz4-java.version>
-		<snappy-java.version>1.1.10.9</snappy-java.version>
+		<snappy-java.version>1.1.10.12</snappy-java.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
