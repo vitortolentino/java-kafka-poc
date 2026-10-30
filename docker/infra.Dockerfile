@@ -5,7 +5,7 @@
 # Stage only used as a source for the Terraform binary (static Go binary, runs on any Linux)
 FROM hashicorp/terraform:1.16.5 AS terraform
 
-FROM mcr.microsoft.com/azure-cli:2.90.0
+FROM mcr.microsoft.com/azure-cli:2.91.0
 COPY --from=terraform /bin/terraform /usr/local/bin/terraform
 
 # Non-root user (uid 1000, the usual WSL user, so files written to the bind mount keep your ownership).
