@@ -82,7 +82,7 @@ services:
   # Security scan (dependency CVEs, Dockerfile/Terraform misconfigurations, secrets): docker compose run --rm trivy
   trivy:
     profiles: ["tools"]
-    image: aquasec/trivy:0.76.0
+    image: aquasec/trivy:0.76.1
     working_dir: /app
     command: ["fs", "--config", "trivy.yaml", "--skip-version-check", "."]
     volumes:
