@@ -1,9 +1,7 @@
-package poc_kafka.controller;
-
-import java.net.URI;
+package pockafka.controller;
 
 import jakarta.validation.Valid;
-
+import java.net.URI;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
-import poc_kafka.controller.dto.MessageRequest;
-import poc_kafka.controller.dto.MessageResponse;
-import poc_kafka.service.MessageService;
+import pockafka.controller.dto.MessageRequest;
+import pockafka.controller.dto.MessageResponse;
+import pockafka.service.MessageService;
 
 @RestController
 @RequestMapping("/messages")
@@ -47,7 +44,9 @@ public class MessageController {
     public ResponseEntity<MessageResponse> create(@Valid @RequestBody MessageRequest request) {
         MessageResponse accepted = service.create(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{id}").buildAndExpand(accepted.id()).toUri();
+                .path("/{id}")
+                .buildAndExpand(accepted.id())
+                .toUri();
         return ResponseEntity.accepted().location(location).body(accepted);
     }
 

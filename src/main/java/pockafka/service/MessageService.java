@@ -1,20 +1,18 @@
-package poc_kafka.service;
+package pockafka.service;
 
 import java.time.Instant;
 import java.util.UUID;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import poc_kafka.controller.dto.MessageRequest;
-import poc_kafka.controller.dto.MessageResponse;
-import poc_kafka.domain.Message;
-import poc_kafka.messaging.MessageCreatedEvent;
-import poc_kafka.messaging.MessageProducer;
-import poc_kafka.repository.MessageRepository;
+import pockafka.controller.dto.MessageRequest;
+import pockafka.controller.dto.MessageResponse;
+import pockafka.domain.Message;
+import pockafka.messaging.MessageCreatedEvent;
+import pockafka.messaging.MessageProducer;
+import pockafka.repository.MessageRepository;
 
 @Service
 public class MessageService {
@@ -30,9 +28,7 @@ public class MessageService {
     }
 
     public Page<MessageResponse> list(String city, Pageable pageable) {
-        Page<Message> page = city == null
-                ? repository.findAll(pageable)
-                : repository.findByCity(city, pageable);
+        Page<Message> page = city == null ? repository.findAll(pageable) : repository.findByCity(city, pageable);
         return page.map(MessageResponse::from);
     }
 
@@ -46,8 +42,8 @@ public class MessageService {
      */
     public MessageResponse create(MessageRequest request) {
         Instant now = Instant.now();
-        var event = new MessageCreatedEvent(UUID.randomUUID().toString(), request.name(), request.city(),
-                request.note(), now);
+        var event = new MessageCreatedEvent(
+                UUID.randomUUID().toString(), request.name(), request.city(), request.note(), now);
         producer.publish(event);
         return new MessageResponse(event.id(), event.name(), event.city(), event.note(), now, now, null);
     }
@@ -61,14 +57,20 @@ public class MessageService {
             log.info("Message {} already saved, ignoring redelivery", event.id());
             return;
         }
-        repository.save(new Message(event.id(), event.name(), event.city(), event.note(),
-                event.createdAt(), event.createdAt(), consumer));
+        repository.save(new Message(
+                event.id(), event.name(), event.city(), event.note(), event.createdAt(), event.createdAt(), consumer));
     }
 
     public MessageResponse update(String id, MessageRequest request) {
         Message current = findDocument(id);
-        Message updated = new Message(current.id(), request.name(), request.city(), request.note(),
-                current.createdAt(), Instant.now(), current.savedBy());
+        Message updated = new Message(
+                current.id(),
+                request.name(),
+                request.city(),
+                request.note(),
+                current.createdAt(),
+                Instant.now(),
+                current.savedBy());
         return MessageResponse.from(repository.save(updated));
     }
 

@@ -1,4 +1,4 @@
-package poc_kafka;
+package pockafka;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -8,8 +8,6 @@ import org.springframework.kafka.test.context.EmbeddedKafka;
 @EmbeddedKafka(bootstrapServersProperty = "spring.kafka.bootstrap-servers")
 class PocKafkaApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
-
+    @Test
+    void contextLoads() {}
 }

@@ -1,7 +1,6 @@
-package poc_kafka.domain;
+package pockafka.domain;
 
 import java.time.Instant;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -19,5 +18,4 @@ public record Message(
         String note,
         Instant createdAt,
         Instant updatedAt,
-        String savedBy) {
-}
+        String savedBy) {}

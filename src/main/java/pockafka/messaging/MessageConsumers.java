@@ -1,4 +1,4 @@
-package poc_kafka.messaging;
+package pockafka.messaging;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
@@ -7,8 +7,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
-
-import poc_kafka.service.MessageService;
+import pockafka.service.MessageService;
 
 /**
  * Two listeners in the same consumer group: Kafka assigns each partition to one of them,
@@ -39,11 +38,13 @@ public class MessageConsumers {
     }
 
     /** Only logs: in a real system someone would inspect, fix and replay these records. */
-    @KafkaListener(id = "dead-letter-logger", topics = KafkaConfig.DEAD_LETTER_TOPIC,
+    @KafkaListener(
+            id = "dead-letter-logger",
+            topics = KafkaConfig.DEAD_LETTER_TOPIC,
             properties = "value.deserializer=org.apache.kafka.common.serialization.ByteArrayDeserializer")
     void deadLetter(ConsumerRecord<String, byte[]> record) {
-        log.warn("Dead-letter record: partition={} offset={} key={}",
-                record.partition(), record.offset(), record.key());
+        log.warn(
+                "Dead-letter record: partition={} offset={} key={}", record.partition(), record.offset(), record.key());
     }
 
     private void save(MessageCreatedEvent event, String consumer, int partition) {

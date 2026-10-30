@@ -1,4 +1,4 @@
-package poc_kafka.messaging;
+package pockafka.messaging;
 
 import org.springframework.kafka.core.KafkaOperations;
 import org.springframework.stereotype.Component;

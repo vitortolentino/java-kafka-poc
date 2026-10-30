@@ -1,4 +1,4 @@
-package poc_kafka.controller;
+package pockafka.controller;
 
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.containsString;
@@ -11,8 +11,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.jayway.jsonpath.JsonPath;
 import java.time.Duration;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +21,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.web.servlet.MockMvc;
-
-import com.jayway.jsonpath.JsonPath;
-
-import poc_kafka.repository.MessageRepository;
+import pockafka.repository.MessageRepository;
 
 /** Requires the docker-compose MongoDB; Kafka runs embedded in the test JVM. */
 @SpringBootTest
@@ -45,24 +42,28 @@ class MessageControllerTest {
 
     @Test
     void fullCrud() throws Exception {
-        String created = mvc.perform(post("/messages").contentType(MediaType.APPLICATION_JSON)
+        String created = mvc.perform(post("/messages")
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"name": "Maria Silva", "city": "Recife", "note": "first"}
                                 """))
                 .andExpect(status().isAccepted())
                 .andExpect(header().string("Location", containsString("/messages/")))
                 .andExpect(jsonPath("$.createdAt").exists())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
         String id = JsonPath.read(created, "$.id");
 
         // POST only queues the message: wait until a Kafka consumer saves it
-        await().atMost(Duration.ofSeconds(15)).untilAsserted(() ->
-                mvc.perform(get("/messages/{id}", id))
+        await().atMost(Duration.ofSeconds(15))
+                .untilAsserted(() -> mvc.perform(get("/messages/{id}", id))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.name").value("Maria Silva"))
                         .andExpect(jsonPath("$.savedBy").value(startsWith("consumer-"))));
 
-        mvc.perform(put("/messages/{id}", id).contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(put("/messages/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"name": "Maria Souza", "city": "Olinda", "note": "edited"}
                                 """))
@@ -80,8 +81,7 @@ class MessageControllerTest {
 
     @Test
     void rejectsShortName() throws Exception {
-        mvc.perform(post("/messages").contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mvc.perform(post("/messages").contentType(MediaType.APPLICATION_JSON).content("""
                                 {"name": "Ana", "city": "Recife"}
                                 """))
                 .andExpect(status().isBadRequest())

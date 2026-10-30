@@ -1,4 +1,4 @@
-package poc_kafka.messaging;
+package pockafka.messaging;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
@@ -30,11 +29,10 @@ import org.springframework.kafka.support.serializer.DeserializationException;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
-
-import poc_kafka.controller.dto.MessageRequest;
-import poc_kafka.domain.Message;
-import poc_kafka.repository.MessageRepository;
-import poc_kafka.service.MessageService;
+import pockafka.controller.dto.MessageRequest;
+import pockafka.domain.Message;
+import pockafka.repository.MessageRepository;
+import pockafka.service.MessageService;
 
 /** Requires the docker-compose MongoDB; Kafka runs embedded in the test JVM. */
 @SpringBootTest
@@ -64,8 +62,9 @@ class MessageKafkaFlowTest {
         // Each consumer of the group must own one of the two partitions before we publish.
         // Right after startup the first consumer to join may briefly hold both, until the
         // group rebalances (ContainerTestUtils.waitForAssignment fails fast on that instead of waiting).
-        await().atMost(Duration.ofSeconds(30)).until(() ->
-                assignedCount(MessageConsumers.CONSUMER_A) == 1 && assignedCount(MessageConsumers.CONSUMER_B) == 1);
+        await().atMost(Duration.ofSeconds(30))
+                .until(() -> assignedCount(MessageConsumers.CONSUMER_A) == 1
+                        && assignedCount(MessageConsumers.CONSUMER_B) == 1);
     }
 
     @Test
@@ -84,8 +83,9 @@ class MessageKafkaFlowTest {
             }
         }
         // Same formula as Kafka's default partitioner for keyed records
-        assertThat(saved).allSatisfy(message -> assertThat(message.savedBy())
-                .isEqualTo(ownerByPartition.get(partitionOf(message.id()))));
+        assertThat(saved)
+                .allSatisfy(message ->
+                        assertThat(message.savedBy()).isEqualTo(ownerByPartition.get(partitionOf(message.id()))));
 
         // With 20 random keys, both partitions (and so both consumers) are virtually always used
         Set<String> consumers = saved.stream().map(Message::savedBy).collect(Collectors.toSet());
@@ -98,16 +98,21 @@ class MessageKafkaFlowTest {
         kafka.send(KafkaConfig.TOPIC, "poison", invalidJson).join();
 
         Map<String, Object> props = KafkaTestUtils.consumerProps(broker, "dlt-test", false);
-        try (Consumer<String, byte[]> consumer = new DefaultKafkaConsumerFactory<>(props,
-                new StringDeserializer(), new ByteArrayDeserializer()).createConsumer()) {
+        try (Consumer<String, byte[]> consumer = new DefaultKafkaConsumerFactory<>(
+                        props, new StringDeserializer(), new ByteArrayDeserializer())
+                .createConsumer()) {
             consumer.subscribe(List.of(KafkaConfig.DEAD_LETTER_TOPIC));
-            ConsumerRecord<String, byte[]> record = KafkaTestUtils.getSingleRecord(consumer,
-                    KafkaConfig.DEAD_LETTER_TOPIC, Duration.ofSeconds(15));
+            ConsumerRecord<String, byte[]> record =
+                    KafkaTestUtils.getSingleRecord(consumer, KafkaConfig.DEAD_LETTER_TOPIC, Duration.ofSeconds(15));
 
             assertThat(record.key()).isEqualTo("poison");
             assertThat(record.value()).isEqualTo(invalidJson);
-            assertThat(new String(record.headers().lastHeader(KafkaHeaders.DLT_EXCEPTION_FQCN).value(),
-                    StandardCharsets.UTF_8)).isEqualTo(DeserializationException.class.getName());
+            assertThat(new String(
+                            record.headers()
+                                    .lastHeader(KafkaHeaders.DLT_EXCEPTION_FQCN)
+                                    .value(),
+                            StandardCharsets.UTF_8))
+                    .isEqualTo(DeserializationException.class.getName());
         }
         assertThat(repository.count()).isZero();
     }

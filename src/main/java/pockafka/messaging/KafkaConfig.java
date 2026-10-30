@@ -1,8 +1,7 @@
-package poc_kafka.messaging;
+package pockafka.messaging;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
@@ -53,8 +52,8 @@ public class KafkaConfig {
         valueSerializers.put(byte[].class, new ByteArraySerializer());
         valueSerializers.put(Object.class, new JacksonJsonSerializer<>().noTypeInfo());
         // Null key serializer: falls back to Boot's key-serializer property (StringSerializer)
-        return new DefaultKafkaProducerFactory<>(properties.buildProducerProperties(),
-                null, new DelegatingByTypeSerializer(valueSerializers, true));
+        return new DefaultKafkaProducerFactory<>(
+                properties.buildProducerProperties(), null, new DelegatingByTypeSerializer(valueSerializers, true));
     }
 
     /**
@@ -63,8 +62,8 @@ public class KafkaConfig {
      */
     @Bean
     DefaultErrorHandler errorHandler(KafkaOperations<Object, Object> template) {
-        var recoverer = new DeadLetterPublishingRecoverer(template,
-                (record, ex) -> new TopicPartition(DEAD_LETTER_TOPIC, record.partition()));
+        var recoverer = new DeadLetterPublishingRecoverer(
+                template, (record, ex) -> new TopicPartition(DEAD_LETTER_TOPIC, record.partition()));
         return new DefaultErrorHandler(recoverer, new FixedBackOff(1000L, 2));
     }
 }

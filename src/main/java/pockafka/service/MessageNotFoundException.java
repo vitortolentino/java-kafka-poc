@@ -1,4 +1,4 @@
-package poc_kafka.service;
+package pockafka.service;
 
 public class MessageNotFoundException extends RuntimeException {
 

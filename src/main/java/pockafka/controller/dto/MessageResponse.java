@@ -1,17 +1,10 @@
-package poc_kafka.controller.dto;
+package pockafka.controller.dto;
 
 import java.time.Instant;
-
-import poc_kafka.domain.Message;
+import pockafka.domain.Message;
 
 public record MessageResponse(
-        String id,
-        String name,
-        String city,
-        String note,
-        Instant createdAt,
-        Instant updatedAt,
-        String savedBy) {
+        String id, String name, String city, String note, Instant createdAt, Instant updatedAt, String savedBy) {
 
     public static MessageResponse from(Message message) {
         return new MessageResponse(
