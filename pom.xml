@@ -28,14 +28,14 @@
 	</scm>
 	<properties>
 		<java.version>25</java.version>
-		<spotless.version>3.10.4</spotless.version>
+		<spotless.version>3.11.0</spotless.version>
 		<palantir-java-format.version>2.102.0</palantir-java-format.version>
 		<spotbugs-maven-plugin.version>4.10.5.0</spotbugs-maven-plugin.version>
 		<findsecbugs.version>1.14.0</findsecbugs.version>
 		<maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
-		<checkstyle.version>14.3.0</checkstyle.version>
+		<checkstyle.version>14.4.0</checkstyle.version>
 		<!-- Security overrides of transitive dependencies (Trivy). Remove once kafka-clients ships fixed versions. -->
-		<lz4-java.version>1.11.4</lz4-java.version>
+		<lz4-java.version>1.12.1</lz4-java.version>
 		<snappy-java.version>1.1.10.9</snappy-java.version>
 	</properties>
 	<dependencyManagement>
